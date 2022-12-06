@@ -2,3 +2,4 @@
 	path = crates/tongsuo-rust-openssl
 	url = https://github.com/iamwwc/tongsuo-rust-openssl
 	branch = master
+	ignore = dirty
