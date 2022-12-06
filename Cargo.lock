@@ -131,6 +131,7 @@ dependencies = [
  "bitflags",
  "clap_lex 0.3.0",
  "is-terminal",
+ "once_cell",
  "strsim",
  "termcolor",
 ]
@@ -919,4 +920,5 @@ dependencies = [
  "clap 4.0.29",
  "hyper",
  "openssl",
+ "tokio",
 ]

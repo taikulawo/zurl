@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 hyper = "0.14.23"
 anyhow = "1.0.66"
-clap = "4.0.29"
+clap = { version = "4.0.29", features = ["cargo"]}
+tokio = { version = "1.23.0", features = ["full"]}
 openssl = { version = "0.10.42", path = "../tongsuo-rust-openssl/openssl/", features = ["tokio", "tongsuo", "bindgen"]}
