@@ -1,0 +1,20 @@
+[workspace]
+members = [
+    "crates/zurl",
+    "crates/tongsuo-rust-openssl/openssl/"
+]
+resolver = "2"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+lto = true
+debug = false
+opt-level = 3
+overflow-checks = false
+
+# reqwest 会间接依赖openssl-sys，导致两份 native openssl lib，编译出错
+# 这里强行指定为本地openssl-sys，只依赖一份
+[patch.crates-io]
+openssl-sys = { path = "./crates/tongsuo-rust-openssl/openssl-sys"}

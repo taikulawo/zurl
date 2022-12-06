@@ -1,0 +1,12 @@
+[package]
+name = "zurl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper = "0.14.23"
+anyhow = "1.0.66"
+clap = "4.0.29"
+openssl = { version = "0.10.42", path = "../tongsuo-rust-openssl/openssl/", features = ["tokio", "tongsuo", "bindgen"]}
