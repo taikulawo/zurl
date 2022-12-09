@@ -1,5 +1,9 @@
 国密 http client cli
 
+gen command 支持签发RSA，ECC，SM2证书
+client 支持指定加密套件(支持国密套件)请求https server
+
+
 安装方式
 
 ```
