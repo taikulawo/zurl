@@ -28,6 +28,15 @@ zurl client --sni test.com --tls-version 1.3 --cipher TLS_SM4_GCM_SM3 https://12
 ```
 
 
+Debian如何安装RootCA
+
+```
+sudo mkdir /usr/local/share/ca-certificates/extra
+sudo cp root.cert.pem /usr/local/share/ca-certificates/extra/root.cert.crt
+sudo update-ca-certificates
+```
+
+
 ---------------
 
 本地开发测试
