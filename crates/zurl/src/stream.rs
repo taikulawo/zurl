@@ -14,7 +14,7 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::subcommands::client::BoxStream;
 use crate::subcommands::{ClientArgs, ServerArgs};
-use crate::{certificates};
+use crate::{certificates, DEFAULT_CIPHER};
 
 pub enum TlsAlpn {
     H1,
@@ -86,8 +86,10 @@ impl TlsBuilder {
                 Err(AlpnError::ALERT_FATAL)
             });
     }
-    pub fn build(self) -> SslFactory {
+    pub fn build(mut self) -> SslFactory {
+        self.ctx.set_cipher_list(DEFAULT_CIPHER).unwrap();
         let ctx = self.ctx.build();
+        
         SslFactory {
             ctx: Arc::new(ctx),
             alpn_index: self.alpn_index.clone(),
@@ -230,21 +232,21 @@ impl Into<Certificates> for ServerArgs {
     fn into(self) -> Certificates {
         Certificates {
             ntls_enc_cert_content: self.ntls_enc_cert_content,
-            ntls_enc_cert_file_path: self.ntls_enc_cert_file_path,
+            ntls_enc_cert_file_path: self.ntls_enc_cert_file,
             ntls_enc_key_content: self.ntls_enc_key_content,
-            ntls_enc_key_file_path: self.ntls_enc_key_file_path,
+            ntls_enc_key_file_path: self.ntls_enc_key_file,
             ntls_sign_cert_content: self.ntls_sign_cert_content,
-            ntls_sign_cert_file_path: self.ntls_sign_cert_file_path,
+            ntls_sign_cert_file_path: self.ntls_sign_cert_file,
             ntls_sign_key_content: self.ntls_sign_key_content,
-            ntls_sign_key_file_path: self.ntls_sign_key_file_path,
+            ntls_sign_key_file_path: self.ntls_sign_key_file,
             sm2_cert_content: self.sm2_cert_content,
             sm2_key_content: self.sm2_key_content,
             tls_cert_content: self.tls_cert_content,
-            tls_key_file_path: self.tls_key_file_path,
-            tls_cert_file_path: self.tls_cert_file_path,
+            tls_key_file_path: self.tls_key_file,
+            tls_cert_file_path: self.tls_cert_file,
             tls_key_content: self.tls_key_content,
-            sm2_cert_file_path: self.sm2_cert_file_path,
-            sm2_key_file_path: self.sm2_key_file_path,
+            sm2_cert_file_path: self.sm2_cert_file,
+            sm2_key_file_path: self.sm2_key_file,
         }
     }
 }

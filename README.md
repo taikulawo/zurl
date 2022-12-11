@@ -19,7 +19,7 @@ zurl gen --ca www.example.com .
 签发leaf
 
 ```
-zurl gen www.test.com . --ca-cert-path ./www.example.com.cert.pem --ca-key-path ./www.example.com.key.pem
+zurl gen www.test.com . --ca-cert ./www.example.com.cert.pem --ca-key ./www.example.com.key.pem
 ```
 
 请求
