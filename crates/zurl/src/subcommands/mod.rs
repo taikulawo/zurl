@@ -47,23 +47,23 @@ pub struct ClientArgs {
 pub struct ServerArgs {
     pub addr: SocketAddr,
     #[arg(long)]
-    pub tls_cert_file_path: Option<String>,
+    pub tls_cert_file: Option<String>,
     #[arg(long)]
-    pub tls_key_file_path: Option<String>,
+    pub tls_key_file: Option<String>,
     #[arg(long)]
-    pub sm2_cert_file_path: Option<String>,
+    pub sm2_cert_file: Option<String>,
     #[arg(long)]
-    pub sm2_key_file_path: Option<String>,
+    pub sm2_key_file: Option<String>,
 
     // ntls
     #[arg(long)]
-    pub ntls_enc_cert_file_path: Option<String>,
+    pub ntls_enc_cert_file: Option<String>,
     #[arg(long)]
-    pub ntls_enc_key_file_path: Option<String>,
+    pub ntls_enc_key_file: Option<String>,
     #[arg(long)]
-    pub ntls_sign_cert_file_path: Option<String>,
+    pub ntls_sign_cert_file: Option<String>,
     #[arg(long)]
-    pub ntls_sign_key_file_path: Option<String>,
+    pub ntls_sign_key_file: Option<String>,
 
     #[arg(long)]
     pub tls_cert_content: Option<Vec<String>>,
@@ -94,9 +94,9 @@ pub struct GenArgs {
     #[arg(long, default_value_t = false)]
     ca: bool,
     #[arg(long)]
-    ca_key_path: Option<PathBuf>,
+    ca_key: Option<PathBuf>,
     #[arg(long)]
-    ca_cert_path: Option<PathBuf>,
+    ca_cert: Option<PathBuf>,
     // common name
     // 除ca外，common name必须为签发的域名
     name: String,
@@ -107,11 +107,11 @@ impl GenArgs {
     pub fn default_rsa_root_ca() -> Self {
         Self {
             ca: true,
-            ca_key_path: None,
+            ca_key: None,
             name: "test.example.org".to_string(),
             ty: "rsa".to_string(),
             out_path: "./".into(),
-            ca_cert_path: Some("./".try_into().unwrap()),
+            ca_cert: Some("./".try_into().unwrap()),
         }
     }
 }

@@ -19,8 +19,6 @@ use openssl::{
         X509NameBuilder, X509Ref, X509Req, X509ReqBuilder, X509,
     }, ec::{EcGroup, EcKey}, nid::Nid, ssl::tongsuo::NID_SM2,
 };
-
-
 use super::GenArgs;
 
 pub fn gen_cert(args: GenArgs) -> anyhow::Result<()> {
@@ -144,16 +142,14 @@ fn mk_request(args: &GenArgs, key_pair: &PKey<Private>) -> Result<X509Req, Error
 }
 
 fn sign_cert(args: GenArgs) -> anyhow::Result<()> {
-    let ca_cert_path = args.ca_cert_path.as_ref().expect("missing ca-cert-path ");
-    let ca_key_path = args.ca_key_path.as_ref().expect("missing ca-key-path");
+    let ca_cert_path = args.ca_cert.as_ref().expect("missing ca-cert-path ");
+    let ca_key_path = args.ca_key.as_ref().expect("missing ca-key-path");
     let ca_cert = fs::read(ca_cert_path)?;
     let ca_key = fs::read(ca_key_path)?;
     let ca_cert = X509::from_pem(&*ca_cert)?;
     let ca_key = PKey::private_key_from_pem(&*ca_key)?;
     let req = mk_request(&args, &ca_key)?;
 
-
-    
     let key_pair = match &*args.ty {
         "sm2" => {
             gen_sm2_pair()?
