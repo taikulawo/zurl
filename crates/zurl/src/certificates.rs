@@ -1,5 +1,5 @@
 use anyhow::bail;
-use openssl::ssl::{Ssl, SslMethod};
+use openssl::{ssl::{Ssl, SslMethod}, x509::X509};
 
 use crate::stream::Certificates;
 
@@ -42,7 +42,8 @@ pub fn set_certificate(info: &Certificates, ssl: &mut Ssl) -> anyhow::Result<()>
         if index == 0 {
             ssl.use_certificate_pem(cert.as_bytes())?;
         } else {
-            ssl.add_chain_cert_pem(cert.as_bytes())?;
+            let x509 = X509::from_pem(cert.as_bytes())?;
+            ssl.add_chain_cert(x509)?;
         }
     }
     ssl.use_private_key_pem(&key.as_bytes())?;
