@@ -1,9 +1,9 @@
 use std::{any::Any, collections::HashMap, net::SocketAddr, sync::Arc};
+use std::ops::Deref;
 
 use anyhow::{anyhow, bail};
 use async_trait::async_trait;
 use hyper::{body, Body, HeaderMap, Request};
-use lazy_static::__Deref;
 use openssl::ssl::SslMethod;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
@@ -24,9 +24,41 @@ impl<S> ProxyStream for S where S: AsyncRead + AsyncWrite + Unpin + Send + 'stat
 pub type BoxStream = Box<dyn ProxyStream>;
 pub type Payload = Box<dyn Any + Send + 'static>;
 pub type RealAdaptor = Box<dyn Adaptor>;
+
 #[async_trait]
 pub trait Adaptor {
     async fn request(&self, payload: ClientArgs) -> anyhow::Result<()>;
+}
+pub async fn to_final_addr(args: &ClientArgs, dns_client: Arc<DnsClient>) -> anyhow::Result<SocketAddr> {
+    let real_url = Url::parse(&args.url)?;
+    let port = match real_url.scheme() {
+        "https" => {
+            real_url.port().unwrap_or(443)
+        },
+        "tcp" => {
+            real_url.port().ok_or(anyhow!(""))?
+        },
+        x@_ => {
+            bail!("unsupport protocol {}", x)
+        }
+    };
+    let host = real_url.host();
+    let addr = match host {
+        Some(x) => match x {
+            Host::Ipv4(x) => SocketAddr::from((x, port)),
+            Host::Ipv6(x) => SocketAddr::from((x, port)),
+            Host::Domain(x) => {
+                let resp = dns_client.lookup(x.to_string()).await?;
+                let ip_addr = resp.get(0).ok_or_else(|| anyhow!("no endpoint found"))?;
+                SocketAddr::from((ip_addr.clone(), port))
+            }
+        },
+        _ => {
+            bail!("no host found")
+        }
+    };
+    Ok(addr)
+
 }
 
 pub async fn create_adaptor(client: ClientArgs) -> anyhow::Result<()> {
@@ -76,9 +108,13 @@ pub async fn create_adaptor(client: ClientArgs) -> anyhow::Result<()> {
 
     let x: RealAdaptor = match *prefix {
         "http" | "https" => {
-            let x = HttpAdaptor::new(client.clone(), factory)?;
+            let x = HttpsAdaptor::new(client.clone(), factory)?;
             Box::new(x)
-        }
+        },
+        "tcp" => {
+            let x = TcpAdaptor::new(client.clone(), factory)?;
+            Box::new(x)
+        },
         _ => {
             bail!("unknown protocol {}", url);
         }
@@ -87,11 +123,12 @@ pub async fn create_adaptor(client: ClientArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-struct HttpAdaptor {
+struct TcpAdaptor {
     dns_client: Arc<DnsClient>,
     factory: Arc<SslFactory>,
 }
-impl HttpAdaptor {
+
+impl TcpAdaptor {
     pub fn new(cli: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
         let dns_client = Arc::new(DnsClient::new_with_default_resolver()?);
         let s = Self {
@@ -100,60 +137,81 @@ impl HttpAdaptor {
         };
         Ok(s)
     }
-    async fn remote_addr(
-        &self,
-        dns_client: Arc<DnsClient>,
-        real_url: &Url,
-    ) -> anyhow::Result<SocketAddr> {
-        let prefix = real_url.scheme();
-        let is_https = prefix.contains("https");
-        let host = real_url.host();
-        let port = real_url
-            .port()
-            .unwrap_or_else(|| if is_https { 443 } else { 80 });
-        let addr = match host {
-            Some(x) => match x {
-                Host::Ipv4(x) => SocketAddr::from((x, port)),
-                Host::Ipv6(x) => SocketAddr::from((x, port)),
-                Host::Domain(x) => {
-                    let resp = dns_client.lookup(x.to_string()).await?;
-                    let ip_addr = resp.get(0).ok_or_else(|| anyhow!("no endpoint found"))?;
-                    SocketAddr::from((ip_addr.clone(), port))
-                }
-            },
-            _ => {
-                bail!("no host found")
-            }
+}
+
+#[async_trait]
+impl Adaptor for TcpAdaptor {
+    async fn request(&self, args: ClientArgs) -> anyhow::Result<()> {
+        let addr = to_final_addr(&args, self.dns_client.clone()).await?;
+        let stream = TcpStream::connect(addr).await?;
+        let mut ssl = self.factory.ssl(stream, args.clone().into());
+        if args.enable_ntls {
+            ssl.enable_ntls();
+            ssl.set_ssl_method(SslMethod::ntls());
+        }
+        let stream = ssl.spawn()?;
+        let (mut read_half, mut write_half) = tokio::io::split(stream);
+        let mut stdin = tokio::io::stdin();
+        let mut stdout = tokio::io::stdout();
+        let fut1 = tokio::spawn(async move{
+            tokio::io::copy(&mut stdin, &mut write_half).await?;
+            Ok::<_, anyhow::Error>(())
+        });
+        let fut2 = tokio::spawn(async move {
+            tokio::io::copy(&mut read_half, &mut stdout).await?;
+            Ok::<_, anyhow::Error>(())
+        });
+        let (a, b) = futures::future::join(fut1, fut2).await;
+        a??;
+        b??;
+        Ok(())
+    }
+}
+
+struct HttpsAdaptor {
+    dns_client: Arc<DnsClient>,
+    factory: Arc<SslFactory>,
+}
+impl HttpsAdaptor {
+    pub fn new(cli: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
+        let dns_client = Arc::new(DnsClient::new_with_default_resolver()?);
+        let s = Self {
+            dns_client,
+            factory: Arc::new(ssl_factory),
         };
-        Ok(addr)
+        Ok(s)
     }
 }
 
 #[async_trait]
-impl Adaptor for HttpAdaptor {
-    async fn request(&self, payload: ClientArgs) -> anyhow::Result<()> {
-        let real_url = Url::parse(&payload.url)?;
-        let addr = self.remote_addr(self.dns_client.clone(), &real_url).await?;
+impl Adaptor for HttpsAdaptor {
+    async fn request(&self, args: ClientArgs) -> anyhow::Result<()> {
+        let real_url = Url::parse(&args.url)?;
+        
+        let addr = to_final_addr(&args, self.dns_client.clone()).await?;
         let stream = TcpStream::connect(addr).await?;
-        let stream: BoxStream = if real_url.scheme() == "https" {
-            let mut ssl = self.factory.ssl(stream, payload.clone().into());
+        if real_url.scheme() == "http" {
+            // 我们要求每个请求都必须是TLS的
+            // 如果没有使用TLS的需求，那就没必要用zurl，curl就可以
+            bail!("for http protocol, only https supported");
+        }
+        let stream: BoxStream = {
+            let mut ssl = self.factory.ssl(stream, args.clone().into());
             ssl.set_connect_state();
-            if payload.enable_ntls {
+            if args.enable_ntls {
                 ssl.enable_ntls();
             }
-            if let Some(sni) = payload.sni {
+            if let Some(sni) = args.sni {
                 ssl.set_server_name(&*sni);
             }
             Box::new(ssl.spawn()?)
-        } else {
-            Box::new(stream)
         };
         let builder = hyper::client::conn::Builder::new();
         let (mut sender, connection) = builder.handshake(stream).await?;
         let mut req = Request::builder()
-            .method(payload.method.deref())
-            .uri(payload.url);
-        match (payload.header, req.headers_mut()) {
+            .method(args.method.deref())
+            .uri(args.url);
+        match (args.header, req.headers_mut()) {
             (Some(headers), Some(target)) => {
                 let mut h = HashMap::with_capacity(headers.len());
                 for header in headers {
@@ -172,7 +230,7 @@ impl Adaptor for HttpAdaptor {
                 eprintln!("Error in connection: {}", e);
             }
         });
-        let req = if let Some(x) = payload.body {
+        let req = if let Some(x) = args.body {
             req.body(Body::from(x))
         } else {
             req.body(Body::empty())

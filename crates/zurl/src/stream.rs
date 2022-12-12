@@ -121,6 +121,7 @@ pub struct TlsStreamBuilder<T> {
     alpn_index: Option<Index<Ssl, AlpnCallbackArgument>>,
     state: State,
 }
+
 impl<T> TlsStreamBuilder<T>
 where
     T: AsyncRead + AsyncWrite + Unpin,
@@ -154,7 +155,10 @@ where
         self.ssl.set_accept_state();
     }
     pub fn enable_ntls(&mut self) {
-        self.ssl.set_ssl_method(SslMethod::ntls());
+        self.ssl.enable_ntls();
+    }
+    pub fn set_ssl_method(&mut self, method: SslMethod) {
+        self.ssl.set_ssl_method(method);
     }
 }
 

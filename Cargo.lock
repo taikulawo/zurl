@@ -545,9 +545,9 @@ dependencies = [
 
 [[package]]
 name = "ipnet"
-version = "2.5.1"
+version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f88c5561171189e69df9d98bcf18fd5f9558300f7ea7b801eb8a0fd748bd8745"
+checksum = "11b0d96e660696543b251e58030cf9787df56da39dab19ad60eae7353040917e"
 
 [[package]]
 name = "is-terminal"
@@ -700,7 +700,7 @@ checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
 [[package]]
 name = "openssl"
 version = "0.10.44"
-source = "git+https://github.com/iamwwc/tongsuo-rust-openssl?rev=28908d7fb51247755a05da26acef4391c7c51709#28908d7fb51247755a05da26acef4391c7c51709"
+source = "git+https://github.com/iamwwc/tongsuo-rust-openssl?branch=master#a2c2c69c03b4dc1441bf195df82cecd03ba1cfa8"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -717,7 +717,7 @@ dependencies = [
 [[package]]
 name = "openssl-macros"
 version = "0.1.0"
-source = "git+https://github.com/iamwwc/tongsuo-rust-openssl?rev=28908d7fb51247755a05da26acef4391c7c51709#28908d7fb51247755a05da26acef4391c7c51709"
+source = "git+https://github.com/iamwwc/tongsuo-rust-openssl?branch=master#a2c2c69c03b4dc1441bf195df82cecd03ba1cfa8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -727,7 +727,7 @@ dependencies = [
 [[package]]
 name = "openssl-sys"
 version = "0.9.79"
-source = "git+https://github.com/iamwwc/tongsuo-rust-openssl?rev=28908d7fb51247755a05da26acef4391c7c51709#28908d7fb51247755a05da26acef4391c7c51709"
+source = "git+https://github.com/iamwwc/tongsuo-rust-openssl?branch=master#a2c2c69c03b4dc1441bf195df82cecd03ba1cfa8"
 dependencies = [
  "autocfg",
  "bindgen",

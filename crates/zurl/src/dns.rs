@@ -65,7 +65,6 @@ impl DnsClient {
                 };
                 let domain_names = &span[1..];
                 for s in domain_names {
-                    let domain_name = s.to_string();
                     if let Some(inner) = map.get_mut(*s) {
                         inner.push(addr.clone())
                     } else {
