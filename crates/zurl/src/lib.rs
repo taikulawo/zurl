@@ -43,6 +43,7 @@ impl Arguments {
                     ntls_enc_key_content,
                     ntls_sign_cert_content,
                     ntls_sign_key_content,
+                    ..
                 } = server;
                 if let (Some(ref f), None) = (&tls_cert_file_path, &tls_cert_content) {
                     let s = tokio::fs::read_to_string(Path::new(&**f)).await?;

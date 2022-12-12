@@ -10,7 +10,7 @@ mod gen_test;
 #[derive(Args, Clone, Debug, Default)]
 pub struct ClientArgs {
     pub url: String,
-    #[arg(long, default_value = "1.2")]
+    #[arg(long)]
     pub tls_version: String,
     #[arg(short, long)]
     pub cipher: Option<String>,
@@ -42,6 +42,8 @@ pub struct ClientArgs {
     pub ntls_sign_cert_content: Option<String>,
     #[arg(long)]
     pub ntls_sign_key_content: Option<String>,
+    #[arg(long, default_value_t = false)]
+    pub enable_ntls: bool
 }
 #[derive(Args, Clone, Debug)]
 pub struct ServerArgs {
@@ -83,6 +85,8 @@ pub struct ServerArgs {
     pub ntls_sign_cert_content: Option<String>,
     #[arg(long)]
     pub ntls_sign_key_content: Option<String>,
+    #[arg(long, default_value_t = false)]
+    pub enable_ntls: bool,
 }
 #[derive(Args, Clone, Debug)]
 pub struct GenArgs {

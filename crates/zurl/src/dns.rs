@@ -1,4 +1,6 @@
 use std::{
+    collections::HashMap,
+    fs,
     net::{IpAddr, SocketAddr},
     str::FromStr,
     time::Duration,
@@ -31,6 +33,7 @@ fn create_udp_socket(addr: &SocketAddr) -> anyhow::Result<UdpSocket> {
 
 pub struct DnsClient {
     servers: Vec<SocketAddr>,
+    map: HashMap<String, Vec<IpAddr>>,
 }
 
 impl DnsClient {
@@ -41,10 +44,37 @@ impl DnsClient {
         for server in servers {
             inner_servers.push(server.socket_addr.clone())
         }
+        let hosts = DnsClient::load_hosts()?;
         let s = Self {
             servers: inner_servers,
+            map: hosts,
         };
         Ok(s)
+    }
+    fn load_hosts() -> anyhow::Result<HashMap<String, Vec<IpAddr>>> {
+        let res = fs::read("/etc/hosts")?;
+        let content = String::from_utf8(res).map_err(|_| anyhow!("decode hosts failed"))?;
+        let lines = content.split("\n").collect::<Vec<&str>>();
+        let mut map: HashMap<String, Vec<IpAddr>> = HashMap::new();
+        for line in lines {
+            let span = line.split_whitespace().collect::<Vec<&str>>();
+            if let Some(x) = span.get(0) {
+                let addr = match x.parse::<IpAddr>() {
+                    Ok(x) => x,
+                    _ => continue,
+                };
+                let domain_names = &span[1..];
+                for s in domain_names {
+                    let domain_name = s.to_string();
+                    if let Some(inner) = map.get_mut(*s) {
+                        inner.push(addr.clone())
+                    } else {
+                        map.insert(s.to_string(), vec![addr]);
+                    }
+                }
+            }
+        }
+        Ok(map)
     }
     async fn query(&self, host: String, server: &SocketAddr) -> anyhow::Result<Vec<IpAddr>> {
         let socket = create_udp_socket(&RANDOM_ADDR)?;
@@ -94,6 +124,9 @@ impl DnsClient {
         }
     }
     pub async fn lookup(&self, host: String) -> anyhow::Result<Vec<IpAddr>> {
+        if let Some(x) = self.map.get(&host) {
+            return Ok(x.clone());
+        }
         // 先用第一个
         // 后面可以并发请求，用最快的
         let addr = self
@@ -115,4 +148,11 @@ impl DnsClient {
         msg.set_op_code(OpCode::Query);
         Ok(msg)
     }
+}
+
+#[cfg(test)]
+#[tokio::test]
+async fn test_load_hosts() {
+    let res = DnsClient::load_hosts().unwrap();
+    println!("{:?}", res);
 }

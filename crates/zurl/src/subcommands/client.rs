@@ -4,6 +4,7 @@ use anyhow::{anyhow, bail};
 use async_trait::async_trait;
 use hyper::{body, Body, HeaderMap, Request};
 use lazy_static::__Deref;
+use openssl::ssl::SslMethod;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     net::TcpStream,
@@ -13,7 +14,8 @@ use url::{Host, Url};
 use crate::{
     dns::DnsClient,
     stream::{SslFactory, TlsBuilder},
-    subcommands::{ClientArgs}, DEFAULT_CIPHER,
+    subcommands::ClientArgs,
+    DEFAULT_CIPHER,
 };
 
 pub trait ProxyStream: AsyncRead + AsyncWrite + Unpin + Send + 'static {}
@@ -34,33 +36,36 @@ pub async fn create_adaptor(client: ClientArgs) -> anyhow::Result<()> {
         .get(0)
         .ok_or_else(|| anyhow!("no avaliable prefix {}", url))?;
 
-    let mut builder = TlsBuilder::new();
+    let mut builder = TlsBuilder::new(SslMethod::tls());
+    if client.enable_ntls {
+        builder.enable_ntls();
+    }
     let ssl_ctx = builder.get_inner_ctx();
     match &*client.tls_version {
         "1.3" => {
             ssl_ctx
-        .set_ciphersuites(if let Some(ref x) = client.cipher {
-            &*x
-        } else {
-            DEFAULT_CIPHER
-        })
-        .unwrap();
-        },
+                .set_ciphersuites(if let Some(ref x) = client.cipher {
+                    &*x
+                } else {
+                    DEFAULT_CIPHER
+                })
+                .unwrap();
+        }
         "1.2" => {
             ssl_ctx
-        .set_cipher_list(if let Some(ref x) = client.cipher {
-            &*x
-        } else {
-            DEFAULT_CIPHER
-        })
-        .unwrap();
-        },
+                .set_cipher_list(if let Some(ref x) = client.cipher {
+                    &*x
+                } else {
+                    DEFAULT_CIPHER
+                })
+                .unwrap();
+        }
         _ => {
             bail!("invalid version {}", client.tls_version)
         }
     }
     let factory = builder.build();
-    
+
     let x: RealAdaptor = match *prefix {
         "http" | "https" => {
             let x = HttpAdaptor::new(client.clone(), factory)?;
@@ -125,6 +130,9 @@ impl Adaptor for HttpAdaptor {
         let stream: BoxStream = if real_url.scheme() == "https" {
             let mut ssl = self.factory.ssl(stream, payload.clone().into());
             ssl.set_connect_state();
+            if payload.enable_ntls {
+                ssl.enable_ntls();
+            }
             if let Some(sni) = payload.sni {
                 ssl.set_server_name(&*sni);
             }
@@ -134,7 +142,9 @@ impl Adaptor for HttpAdaptor {
         };
         let builder = hyper::client::conn::Builder::new();
         let (mut sender, connection) = builder.handshake(stream).await?;
-        let mut req = Request::builder().method(payload.method.deref()).uri(payload.url);
+        let mut req = Request::builder()
+            .method(payload.method.deref())
+            .uri(payload.url);
         match (payload.header, req.headers_mut()) {
             (Some(headers), Some(target)) => {
                 let mut h = HashMap::with_capacity(headers.len());
@@ -171,7 +181,7 @@ impl Adaptor for HttpAdaptor {
 async fn test_sm2() {
     use crate::test_utils::listen_at;
     let response = "HTTP/1.1 200 OK\r\n\r\n";
-    let(addr, handle) = listen_at(None, Some(response)).await;
+    let (addr, handle) = listen_at(None, Some(response)).await;
     let mut args = ClientArgs::default();
     args.sni = Some("test.com".to_string());
     args.cipher = Some("TLS_SM4_GCM_SM3".to_string());

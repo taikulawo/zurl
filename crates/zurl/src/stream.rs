@@ -65,8 +65,8 @@ pub struct SslFactory {
     alpn_index: Option<Index<Ssl, AlpnCallbackArgument>>,
 }
 impl TlsBuilder {
-    pub fn new() -> Self {
-        let ctx = SslContext::builder(SslMethod::tls()).unwrap();
+    pub fn new(method: SslMethod) -> Self {
+        let ctx = SslContext::builder(method).unwrap();
 
         Self {
             ctx,
@@ -97,6 +97,9 @@ impl TlsBuilder {
     }
     pub fn get_inner_ctx(&mut self) -> &mut SslContextBuilder {
         &mut self.ctx
+    }
+    pub fn enable_ntls(&mut self) {
+        self.ctx.enable_ntls();
     }
 }
 
@@ -149,6 +152,9 @@ where
             .expect("set certificates success");
         self.state = State::Handshake;
         self.ssl.set_accept_state();
+    }
+    pub fn enable_ntls(&mut self) {
+        self.ssl.set_ssl_method(SslMethod::ntls());
     }
 }
 
