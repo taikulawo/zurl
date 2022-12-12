@@ -11,7 +11,7 @@ mod gen_test;
 pub struct ClientArgs {
     pub url: String,
     #[arg(long)]
-    pub tls_version: String,
+    pub tls_version: Option<String>,
     #[arg(short, long)]
     pub cipher: Option<String>,
     #[arg(long)]

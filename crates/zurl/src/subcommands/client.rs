@@ -36,34 +36,42 @@ pub async fn create_adaptor(client: ClientArgs) -> anyhow::Result<()> {
         .get(0)
         .ok_or_else(|| anyhow!("no avaliable prefix {}", url))?;
 
-    let mut builder = TlsBuilder::new(SslMethod::tls());
+    let mut builder;
     if client.enable_ntls {
+        builder = TlsBuilder::new(SslMethod::ntls());
         builder.enable_ntls();
+    } else {
+        builder = TlsBuilder::new(SslMethod::tls());
+        let ssl_ctx = builder.get_inner_ctx();
+        if client.tls_version.is_none() {
+            bail!("for no ntls request, add --tls-version arguments");
+        }
+        let version = &*client.tls_version.clone().unwrap();
+        match version {
+            "1.3" => {
+                ssl_ctx
+                    .set_ciphersuites(if let Some(ref x) = client.cipher {
+                        &*x
+                    } else {
+                        DEFAULT_CIPHER
+                    })
+                    .unwrap();
+            }
+            "1.2" => {
+                ssl_ctx
+                    .set_cipher_list(if let Some(ref x) = client.cipher {
+                        &*x
+                    } else {
+                        DEFAULT_CIPHER
+                    })
+                    .unwrap();
+            }
+            _ => {
+                bail!("invalid version {}", version)
+            }
+        }
     }
-    let ssl_ctx = builder.get_inner_ctx();
-    match &*client.tls_version {
-        "1.3" => {
-            ssl_ctx
-                .set_ciphersuites(if let Some(ref x) = client.cipher {
-                    &*x
-                } else {
-                    DEFAULT_CIPHER
-                })
-                .unwrap();
-        }
-        "1.2" => {
-            ssl_ctx
-                .set_cipher_list(if let Some(ref x) = client.cipher {
-                    &*x
-                } else {
-                    DEFAULT_CIPHER
-                })
-                .unwrap();
-        }
-        _ => {
-            bail!("invalid version {}", client.tls_version)
-        }
-    }
+
     let factory = builder.build();
 
     let x: RealAdaptor = match *prefix {
@@ -185,7 +193,7 @@ async fn test_sm2() {
     let mut args = ClientArgs::default();
     args.sni = Some("test.com".to_string());
     args.cipher = Some("TLS_SM4_GCM_SM3".to_string());
-    args.tls_version = "1.3".to_string();
+    args.tls_version = Some("1.3".to_string());
     args.method = "GET".to_string();
     args.url = format!("https://{}", addr);
     create_adaptor(args).await.unwrap();
