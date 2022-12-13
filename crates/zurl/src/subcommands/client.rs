@@ -132,7 +132,7 @@ struct TcpAdaptor {
 }
 
 impl TcpAdaptor {
-    pub fn new(cli: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
+    pub fn new(args: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
         let dns_client = Arc::new(DnsClient::new_with_default_resolver()?);
         let s = Self {
             dns_client,

@@ -125,37 +125,12 @@ impl Authority {
         Ok((cert, key_pair))
     }
     
-    /// 利用预先生成的证书pub/key生成证书请求
-    fn mk_request(&self, args: &GenArgs, key_pair: &PKey<Private>) -> Result<X509Req, ErrorStack> {
-        let mut req_builder = X509ReqBuilder::new()?;
-        req_builder.set_pubkey(key_pair)?;
-    
-        let mut x509_name = X509NameBuilder::new()?;
-        x509_name.append_entry_by_text("C", "US")?;
-        x509_name.append_entry_by_text("ST", "TX")?;
-        x509_name.append_entry_by_text("O", "Some organization")?;
-        x509_name.append_entry_by_text("CN", &args.name)?;
-        let x509_name = x509_name.build();
-        req_builder.set_subject_name(&x509_name)?;
-        match &*args.ty {
-            "sm2" => {
-                req_builder.sign(key_pair, MessageDigest::sm3())?;
-            },
-            _ => {
-                req_builder.sign(key_pair, MessageDigest::sha256())?;
-            }
-        }
-        let req = req_builder.build();
-        Ok(req)
-    }
-    
     fn sign_cert(&self, args: GenArgs) -> anyhow::Result<()> {
         let ca_cert_path = args.ca_cert.as_ref().expect("missing ca-cert-path ");
         let ca_key_path = args.ca_key.as_ref().expect("missing ca-key-path");
         let ca_cert = fs::read(ca_cert_path)?;
         let ca_key = fs::read(ca_key_path)?;
         let ca_cert = X509::from_pem(&*ca_cert)?;
-        let ca_key = PKey::private_key_from_pem(&*ca_key)?;
     
         let key_pair = match &*args.ty {
             "sm2" => {
