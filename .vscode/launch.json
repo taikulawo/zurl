@@ -1,35 +1,46 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'zurl'",
-            "program": "${workspaceFolder}/target/debug/zurl",
+            "name": "debug test_ntls_tcp_adaptor",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=zurl"
+                ],
+                "filter": {
+                    "name": "zurl",
+                    "kind": "lib"
+                }
+            },
             "args": [
-                "https://www.baidu.com"
+                "subcommands::client::test_client::test_ntls_tcp_adaptor",
+                "--exact",
+                "--nocapture"
             ],
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "build"
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Sign sm2",
-            "program": "${workspaceFolder}/target/debug/zurl",
-            "args": [
-                "gen",
-                "--ca",
-                "--ty",
-                "sm2",
-                "www.example.com",
-                "."
-            ],
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "build"
+            "name": "Debug executable 'zurl'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=zurl",
+                    "--package=zurl"
+                ],
+                "filter": {
+                    "name": "zurl",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

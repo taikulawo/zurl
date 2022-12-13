@@ -65,8 +65,19 @@ pub struct SslFactory {
     alpn_index: Option<Index<Ssl, AlpnCallbackArgument>>,
 }
 impl TlsBuilder {
-    pub fn new(method: SslMethod) -> Self {
-        let ctx = SslContext::builder(method).unwrap();
+    pub fn new(enable_ntls: bool) -> Self {
+        let method = if enable_ntls {
+            SslMethod::ntls()
+        }else {
+            SslMethod::tls()
+        };
+        let ctx = if enable_ntls {
+            let mut ctx = SslContext::builder(method).unwrap();
+            ctx.enable_ntls();
+            ctx
+        }else {
+            SslContext::builder(method).unwrap()
+        };
 
         Self {
             ctx,

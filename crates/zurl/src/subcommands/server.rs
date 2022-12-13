@@ -30,11 +30,9 @@ impl EchoServer {
 impl ListenerServer for EchoServer {
     async fn listen(&mut self, addr: SocketAddr) -> anyhow::Result<()> {
         let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-        let mut tls_builder = TlsBuilder::new(SslMethod::tls());
-        if self.args.enable_ntls {
-            tls_builder.enable_ntls();
-        }
+        let mut tls_builder = TlsBuilder::new(self.args.enable_ntls);
         let factory = Arc::new(tls_builder.build());
+        println!("echo server listening at {}", addr);
         loop {
             let (stream, _local_addr) = match listener.accept().await {
                 Ok(x) => x,

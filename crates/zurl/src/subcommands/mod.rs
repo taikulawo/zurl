@@ -5,8 +5,6 @@ use clap::{Args, Subcommand};
 pub mod client;
 pub mod server;
 pub mod gen;
-#[cfg(test)]
-mod gen_test;
 #[derive(Args, Clone, Debug, Default)]
 pub struct ClientArgs {
     pub url: String,
@@ -47,7 +45,6 @@ pub struct ClientArgs {
 }
 #[derive(Args, Clone, Debug)]
 pub struct ServerArgs {
-    pub addr: SocketAddr,
     #[arg(long)]
     pub tls_cert_file: Option<String>,
     #[arg(long)]
@@ -87,7 +84,11 @@ pub struct ServerArgs {
     pub ntls_sign_key_content: Option<String>,
     #[arg(long, default_value_t = false)]
     pub enable_ntls: bool,
+    pub addr: SocketAddr,
 }
+impl ServerArgs {
+}
+
 #[derive(Args, Clone, Debug)]
 pub struct GenArgs {
     #[arg(long, default_value = "rsa")]
@@ -108,12 +109,35 @@ pub struct GenArgs {
 }
 
 impl GenArgs {
+    #[cfg(test)]
     pub fn default_rsa_root_ca() -> Self {
         Self {
             ca: true,
             ca_key: None,
-            name: "test.example.org".to_string(),
+            name: "root-ca.example.org".to_string(),
             ty: "rsa".to_string(),
+            out_path: "./".into(),
+            ca_cert: Some("./".try_into().unwrap()),
+        }
+    }
+    #[cfg(test)]
+    pub fn default_sm2_root_ca() -> Self {
+        Self {
+            ca: true,
+            ca_key: None,
+            name: "root-ca.example.org".to_string(),
+            ty: "sm2".to_string(),
+            out_path: "./".into(),
+            ca_cert: Some("./".try_into().unwrap()),
+        }
+    }
+    #[cfg(test)]
+    pub fn default_ecc_root_ca() -> Self {
+        Self {
+            ca: true,
+            ca_key: None,
+            name: "root-ca.example.org".to_string(),
+            ty: "ecc".to_string(),
             out_path: "./".into(),
             ca_cert: Some("./".try_into().unwrap()),
         }
