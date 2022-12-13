@@ -120,7 +120,7 @@ pub mod test_utils {
         let addr = listener.local_addr().unwrap();
         let (abort_future, handle) = futures::future::abortable(async move{
             loop {
-                let (mut stream, addr) = match listener.accept().await {
+                let (mut stream, _addr) = match listener.accept().await {
                     Ok(x) => x,
                     Err(err) => {
                         eprintln!("listen at {} error {}", addr, err);
@@ -129,7 +129,9 @@ pub mod test_utils {
                 };
                 tokio::spawn(async move{
                     if let Some(response) = response {
-                        stream.write_all(response.as_bytes()).await;
+                        if let Err(err) = stream.write_all(response.as_bytes()).await {
+                            eprintln!("{}", err);
+                        }
                     }
                 });
             };

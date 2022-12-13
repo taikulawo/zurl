@@ -9,14 +9,14 @@ use openssl::{
     bn::{BigNum, MsbOption},
     error::ErrorStack,
     hash::MessageDigest,
-    pkey::{PKey, PKeyRef, Private},
+    pkey::{PKey, Private},
     rsa::Rsa,
     x509::{
         extension::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, SubjectAlternativeName,
             SubjectKeyIdentifier,
         },
-        X509NameBuilder, X509Ref, X509Req, X509ReqBuilder, X509,
+        X509NameBuilder, X509Ref, X509,
     }, ec::{EcGroup, EcKey}, nid::Nid, ssl::tongsuo::NID_SM2,
 };
 use super::GenArgs;
@@ -129,7 +129,7 @@ impl Authority {
         let ca_cert_path = args.ca_cert.as_ref().expect("missing ca-cert-path ");
         let ca_key_path = args.ca_key.as_ref().expect("missing ca-key-path");
         let ca_cert = fs::read(ca_cert_path)?;
-        let ca_key = fs::read(ca_key_path)?;
+        let _ca_key = fs::read(ca_key_path)?;
         let ca_cert = X509::from_pem(&*ca_cert)?;
     
         let key_pair = match &*args.ty {

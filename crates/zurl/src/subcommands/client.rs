@@ -132,7 +132,7 @@ struct TcpAdaptor {
 }
 
 impl TcpAdaptor {
-    pub fn new(args: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
+    pub fn new(_args: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
         let dns_client = Arc::new(DnsClient::new_with_default_resolver()?);
         let s = Self {
             dns_client,
@@ -180,7 +180,7 @@ struct HttpsAdaptor {
     factory: Arc<SslFactory>,
 }
 impl HttpsAdaptor {
-    pub fn new(cli: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
+    pub fn new(_cli: ClientArgs, ssl_factory: SslFactory) -> anyhow::Result<Self> {
         let dns_client = Arc::new(DnsClient::new_with_default_resolver()?);
         let s = Self {
             dns_client,
@@ -282,8 +282,8 @@ pub mod test_client {
         // root ca
         let (root_ca, root_key) = authority.mk_ca_cert(&gen_args).unwrap();
 
-        let root_ca_pem = root_ca.to_pem().unwrap();
-        let root_key_pem = root_key.private_key_to_pem_pkcs8().unwrap();
+        let _root_ca_pem = root_ca.to_pem().unwrap();
+        let _root_key_pem = root_key.private_key_to_pem_pkcs8().unwrap();
 
         // leaf key/cert
         let (sm2_enc_cert, sm2_enc_key) = {

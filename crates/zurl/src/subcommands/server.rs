@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use openssl::ssl::SslMethod;
+
 
 use crate::stream::TlsBuilder;
 
@@ -30,7 +30,7 @@ impl EchoServer {
 impl ListenerServer for EchoServer {
     async fn listen(&mut self, addr: SocketAddr) -> anyhow::Result<()> {
         let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-        let mut tls_builder = TlsBuilder::new(self.args.enable_ntls);
+        let tls_builder = TlsBuilder::new(self.args.enable_ntls);
         let factory = Arc::new(tls_builder.build());
         println!("echo server listening at {}", addr);
         loop {
