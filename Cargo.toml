@@ -11,7 +11,7 @@ license = "MIT"
 hyper = { version = "0.14.23", features = ["client", "http1", "http2"]}
 anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"]}
-tokio = { version = "^1.23.0", features = ["full"]}
+tokio = { version = "^1.23.0", features = ["full"] }
 openssl = { version = "0.10.42", git = "https://github.com/iamwwc/tongsuo-rust-openssl", branch = "master", features = ["tokio", "tongsuo", "bindgen"]}
 futures = "0.3.25"
 async-trait = "0.1.59"
