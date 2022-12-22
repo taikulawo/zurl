@@ -1,8 +1,24 @@
-[workspace]
-members = [
-    "crates/zurl"
-]
-resolver = "2"
+[package]
+name = "zurl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper = { version = "0.14.23", features = ["client", "http1", "http2"]}
+anyhow = "1.0.66"
+clap = { version = "4.0.29", features = ["derive"]}
+tokio = { version = "1.23.0", features = ["full"]}
+openssl = { version = "0.10.42", git = "https://github.com/iamwwc/tongsuo-rust-openssl", branch = "master", features = ["tokio", "tongsuo", "bindgen"]}
+futures = "0.3.25"
+async-trait = "0.1.59"
+trust-dns-proto = "0.22.0"
+trust-dns-resolver = "0.22.0"
+lazy_static = "1.4.0"
+url = "2.3.1"
+socket2 = "0.4.7"
+rand = "0.8.5"
 
 [profile.dev]
 opt-level = 0
