@@ -1,5 +1,9 @@
 use anyhow::bail;
-use openssl::{ssl::{Ssl, SslMethod}, x509::X509};
+use openssl::{
+    pkey::PKey,
+    ssl::{Ssl, SslMethod},
+    x509::X509,
+};
 
 use crate::stream::Certificates;
 
@@ -17,7 +21,7 @@ pub fn set_certificate(info: &Certificates, ssl: &mut Ssl) -> anyhow::Result<()>
         (Some(tls_key), Some(tls_content), ..) => (tls_key, tls_content),
         (_, _, Some(sm2_key), Some(sm2_content), ..) => (sm2_key, sm2_content),
         (.., Some(sign_key), Some(sign_cert_content), Some(enc_key), Some(enc_cert_content)) => {
-            ssl.set_ssl_method(SslMethod::ntls());
+            ssl.set_method(SslMethod::ntls())?;
             match ssl.use_ntls_key_content_and_cert_content_pem(
                 &*sign_key.as_bytes(),
                 &*sign_cert_content.as_bytes(),
@@ -40,12 +44,14 @@ pub fn set_certificate(info: &Certificates, ssl: &mut Ssl) -> anyhow::Result<()>
     ssl.disable_ntls();
     for (index, cert) in content.iter().enumerate() {
         if index == 0 {
-            ssl.use_certificate_pem(cert.as_bytes())?;
+            let cert_x509 = X509::from_pem(cert.as_bytes())?;
+            ssl.set_certificate(cert_x509.as_ref())?;
         } else {
             let x509 = X509::from_pem(cert.as_bytes())?;
             ssl.add_chain_cert(x509)?;
         }
     }
-    ssl.use_private_key_pem(&key.as_bytes())?;
+    let pkey = PKey::private_key_from_pem(key.as_bytes())?;
+    ssl.set_private_key(&pkey)?;
     Ok(())
 }

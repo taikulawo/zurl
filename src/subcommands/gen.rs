@@ -130,7 +130,7 @@ impl Authority {
         let ca_key_path = args.ca_key.as_ref().expect("missing ca-key-path");
         let ca_cert = fs::read(ca_cert_path)?;
         let _ca_key = fs::read(ca_key_path)?;
-        let ca_cert = X509::from_pem(&*ca_cert)?;
+        let ca_cert = X509::from_pem(&ca_cert)?;
     
         let key_pair = match &*args.ty {
             "sm2" => {
@@ -183,13 +183,13 @@ impl Authority {
         x509_name.append_entry_by_text("C", "US").unwrap();
         x509_name.append_entry_by_text("ST", "CA").unwrap();
         x509_name.append_entry_by_text("O", "Some organization").unwrap();
-        x509_name.append_entry_by_text("CN", &name).unwrap();
+        x509_name.append_entry_by_text("CN", name).unwrap();
         let x509_name = x509_name.build();
         
         cert_builder.set_serial_number(&serial_number)?;
         cert_builder.set_subject_name(&x509_name)?;
         cert_builder.set_issuer_name(ca_cert.subject_name())?;
-        cert_builder.set_pubkey(&key_pair)?;
+        cert_builder.set_pubkey(key_pair)?;
         let not_before = Asn1Time::days_from_now(0)?;
         cert_builder.set_not_before(&not_before)?;
         let not_after = Asn1Time::days_from_now(365)?;

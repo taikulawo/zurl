@@ -68,14 +68,14 @@ impl TlsBuilder {
     pub fn new(enable_ntls: bool) -> Self {
         let method = if enable_ntls {
             SslMethod::ntls()
-        }else {
+        } else {
             SslMethod::tls()
         };
         let ctx = if enable_ntls {
             let mut ctx = SslContext::builder(method).unwrap();
             ctx.enable_ntls();
             ctx
-        }else {
+        } else {
             SslContext::builder(method).unwrap()
         };
 
@@ -100,7 +100,7 @@ impl TlsBuilder {
     pub fn build(mut self) -> SslFactory {
         self.ctx.set_cipher_list(DEFAULT_CIPHER).unwrap();
         let ctx = self.ctx.build();
-        
+
         SslFactory {
             ctx: Arc::new(ctx),
             alpn_index: self.alpn_index.clone(),
@@ -146,7 +146,9 @@ where
         Ok(s)
     }
     pub fn set_server_name(&mut self, hostname: &str) {
-        self.ssl.set_hostname(hostname).expect("set hostname success");
+        self.ssl
+            .set_hostname(hostname)
+            .expect("set hostname success");
     }
     pub fn set_connect_state(&mut self) {
         self.state = State::Connecting;
@@ -168,8 +170,8 @@ where
     pub fn enable_ntls(&mut self) {
         self.ssl.enable_ntls();
     }
-    pub fn set_ssl_method(&mut self, method: SslMethod) {
-        self.ssl.set_ssl_method(method);
+    pub fn set_ssl_method(&mut self, method: SslMethod) -> anyhow::Result<()> {
+        self.ssl.set_method(method).map_err(anyhow::Error::from)
     }
 }
 

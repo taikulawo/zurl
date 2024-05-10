@@ -154,7 +154,7 @@ impl Adaptor for TcpAdaptor {
         }
         if args.enable_ntls {
             ssl.enable_ntls();
-            ssl.set_ssl_method(SslMethod::ntls());
+            ssl.set_ssl_method(SslMethod::ntls())?;
         }
         let stream = ssl.spawn()?;
         let (mut read_half, mut write_half) = tokio::io::split(stream);
