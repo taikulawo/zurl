@@ -1,5 +1,3 @@
-#![feature(async_fn_in_trait)]
-
 use clap::{command, Parser};
 use std::{io, path::Path};
 use subcommands::ServerArgs;
