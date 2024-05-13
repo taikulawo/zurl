@@ -77,7 +77,7 @@ pub async fn create_adaptor(args: ClientArgs) -> anyhow::Result<()> {
 
     let mut builder = TlsBuilder::new(args.enable_ntls);
     let ssl_ctx = builder.get_inner_ctx();
-    if !args.enable_ntls{
+    if !args.enable_ntls {
         if args.tls_version.is_none() {
             bail!("for no ntls request, add --tls-version arguments");
         }
@@ -291,7 +291,7 @@ pub mod test_client {
             let name = "leaf.example.org";
             let ty = "sm2";
             let leaf_cert = authority
-                .mk_signed_cert(name, ty, &sm2_key_pair, &root_ca)
+                .mk_signed_cert(name, ty, &sm2_key_pair, &root_ca, &root_key)
                 .unwrap();
 
             let sm2_leaf_cert_pem = leaf_cert.to_pem().unwrap();
@@ -307,7 +307,7 @@ pub mod test_client {
             let name = "leaf.example.org";
             let ty = "sm2";
             let leaf_cert = authority
-                .mk_signed_cert(name, ty, &sm2_key_pair, &root_ca)
+                .mk_signed_cert(name, ty, &sm2_key_pair, &root_ca, &root_key)
                 .unwrap();
 
             let sm2_leaf_cert_pem = leaf_cert.to_pem().unwrap();
