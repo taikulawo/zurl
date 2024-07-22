@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused)]
 use clap::{command, Parser};
 use std::{io, path::Path};
 use subcommands::ServerArgs;
@@ -91,15 +93,16 @@ fn cert_string_to_vec(certs: &str) -> Vec<String> {
 
 pub const DEFAULT_CIPHER: &str = "HIGH:!aNULL:!MD5";
 
-
 pub mod utils {
-    use std::{path::{Path, PathBuf}, fs};
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+    };
 
     pub fn abs_path<P: AsRef<Path>>(path: P) -> PathBuf {
         fs::canonicalize(path.as_ref()).expect(path.as_ref().to_str().unwrap_or("unknown"))
     }
 }
-
 
 #[cfg(test)]
 pub mod test_utils {
@@ -108,15 +111,18 @@ pub mod test_utils {
     use futures::stream::AbortHandle;
     use tokio::io::AsyncWriteExt;
 
-    pub async fn listen_at(addr: Option<SocketAddr>, response: Option<&'static str>) -> (SocketAddr, AbortHandle) {
+    pub async fn listen_at(
+        addr: Option<SocketAddr>,
+        response: Option<&'static str>,
+    ) -> (SocketAddr, AbortHandle) {
         let addr = if let Some(addr) = addr {
             addr
-        }else {
+        } else {
             "127.0.0.1:0".parse::<SocketAddr>().unwrap()
         };
         let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
         let addr = listener.local_addr().unwrap();
-        let (abort_future, handle) = futures::future::abortable(async move{
+        let (abort_future, handle) = futures::future::abortable(async move {
             loop {
                 let (mut stream, _addr) = match listener.accept().await {
                     Ok(x) => x,
@@ -125,14 +131,14 @@ pub mod test_utils {
                         continue;
                     }
                 };
-                tokio::spawn(async move{
+                tokio::spawn(async move {
                     if let Some(response) = response {
                         if let Err(err) = stream.write_all(response.as_bytes()).await {
                             eprintln!("{}", err);
                         }
                     }
                 });
-            };
+            }
         });
         tokio::spawn(abort_future);
         (addr, handle)

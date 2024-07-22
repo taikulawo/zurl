@@ -3,8 +3,8 @@ use std::{net::SocketAddr, path::PathBuf};
 use clap::{Args, Subcommand};
 
 pub mod client;
-pub mod server;
 pub mod gen;
+pub mod server;
 #[derive(Args, Clone, Debug, Default)]
 pub struct ClientArgs {
     pub url: String,
@@ -41,7 +41,7 @@ pub struct ClientArgs {
     #[arg(long)]
     pub ntls_sign_key_content: Option<String>,
     #[arg(long, default_value_t = false)]
-    pub enable_ntls: bool
+    pub enable_ntls: bool,
 }
 #[derive(Args, Clone, Debug)]
 pub struct ServerArgs {
@@ -86,8 +86,7 @@ pub struct ServerArgs {
     pub enable_ntls: bool,
     pub addr: SocketAddr,
 }
-impl ServerArgs {
-}
+impl ServerArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct GenArgs {
@@ -105,7 +104,7 @@ pub struct GenArgs {
     // common name
     // 除ca外，common name必须为签发的域名
     name: String,
-    out_path: PathBuf,
+    out_dir: PathBuf,
 }
 
 impl GenArgs {
@@ -116,7 +115,7 @@ impl GenArgs {
             ca_key: None,
             name: "root-ca.example.org".to_string(),
             ty: "rsa".to_string(),
-            out_path: "./".into(),
+            out_dir: "./".into(),
             ca_cert: Some("./".try_into().unwrap()),
         }
     }
@@ -127,7 +126,7 @@ impl GenArgs {
             ca_key: None,
             name: "root-ca.example.org".to_string(),
             ty: "sm2".to_string(),
-            out_path: "./".into(),
+            out_dir: "./".into(),
             ca_cert: Some("./".try_into().unwrap()),
         }
     }
@@ -138,7 +137,7 @@ impl GenArgs {
             ca_key: None,
             name: "root-ca.example.org".to_string(),
             ty: "ecc".to_string(),
-            out_path: "./".into(),
+            out_dir: "./".into(),
             ca_cert: Some("./".try_into().unwrap()),
         }
     }

@@ -43,7 +43,7 @@ impl Authority {
         };
 
         let pem = cert.to_pem()?;
-        let out_path = &mut args.out_path;
+        let out_path = &mut args.out_dir;
         let name = args.name;
         let cert_name = format!("{}.ca.cert.pem", &*name);
         let out_cert_path = out_path.join(Path::new(&*cert_name));
@@ -63,7 +63,7 @@ impl Authority {
                 let rsa = Rsa::generate(2048)?;
                 PKey::from_rsa(rsa)?
             }
-            "ec" => {
+            "ecc" => {
                 //TODO 用哪个curve name?
                 Self::gen_ec_pair(Nid::X9_62_PRIME256V1)?
             }
@@ -140,7 +140,7 @@ impl Authority {
             self.mk_signed_cert(&args.name, &args.ty, &key_pair, ca_cert.as_ref(), &ca_key)?;
 
         let name = args.name;
-        let out_path = args.out_path;
+        let out_path = args.out_dir;
         let cert_name = format!("{}.cert.pem", &*name);
         let out_cert_path = out_path.join(Path::new(&*cert_name));
         fs::write(out_cert_path, cert.to_pem()?)?;
@@ -234,6 +234,7 @@ impl Authority {
 
     pub fn gen_ec_pair(nid: Nid) -> Result<PKey<Private>, ErrorStack> {
         let group = EcGroup::from_curve_name(nid)?;
+
         let _key = EcKey::from_group(group.as_ref())?;
         let pair = EcKey::generate(&group)?;
         PKey::from_ec_key(pair)

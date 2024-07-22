@@ -1,13 +1,14 @@
 use std::{net::SocketAddr, sync::Arc};
 
-
-
 use crate::stream::TlsBuilder;
 
 use super::ServerArgs;
 
 pub trait ListenerServer {
-    async fn listen(&mut self, addr: SocketAddr) -> anyhow::Result<()>;
+    fn listen(
+        &mut self,
+        addr: SocketAddr,
+    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send;
 }
 
 struct EchoServer {
@@ -21,9 +22,7 @@ pub async fn create_server(args: ServerArgs) -> anyhow::Result<()> {
 
 impl EchoServer {
     pub fn new(args: ServerArgs) -> Self {
-        Self {
-            args
-        }
+        Self { args }
     }
 }
 
@@ -50,8 +49,8 @@ impl ListenerServer for EchoServer {
                         eprintln!("error when copy from reader to writer {}", err)
                     }
                 });
-            }else {
-                continue
+            } else {
+                continue;
             }
         }
     }
@@ -67,6 +66,4 @@ impl ListenerServer for HttpServer {
 
 #[cfg(test)]
 #[tokio::test]
-async fn test_echo_server() {
-
-}
+async fn test_echo_server() {}
