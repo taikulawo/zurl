@@ -13,7 +13,10 @@ use openssl::{
     rsa::Rsa,
     ssl::tongsuo::NID_SM2,
     x509::{
-        extension::{AuthorityKeyIdentifier, BasicConstraints, KeyUsage, SubjectKeyIdentifier},
+        extension::{
+            AuthorityKeyIdentifier, BasicConstraints, KeyUsage, SubjectAlternativeName,
+            SubjectKeyIdentifier,
+        },
         X509NameBuilder, X509Ref, X509VerifyResult, X509,
     },
 };
@@ -200,7 +203,10 @@ impl Authority {
         let subject_key_identifier =
             SubjectKeyIdentifier::new().build(&cert_builder.x509v3_context(Some(ca_cert), None))?;
         cert_builder.append_extension(subject_key_identifier)?;
-
+        let san = SubjectAlternativeName::new()
+            .dns(name)
+            .build(&cert_builder.x509v3_context(None, None))?;
+        cert_builder.append_extension(san)?;
         let auth_key_identifier = AuthorityKeyIdentifier::new()
             .keyid(false)
             .issuer(false)
